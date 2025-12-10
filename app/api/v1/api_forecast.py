@@ -1,3 +1,4 @@
+# 산불 예측 관련 API 엔드포인트 정의 (요청 처리 및 응답 반환)
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 from typing import Annotated

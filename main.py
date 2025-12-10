@@ -1,3 +1,4 @@
+# FastAPI 애플리케이션의 진입점 및 설정 파일 (앱 초기화, 미들웨어, 라우터 등록 등)
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel

@@ -1,3 +1,4 @@
+# SQLModel을 사용한 데이터베이스 테이블(엔티티) 정의 파일
 from datetime import datetime
 from typing import Optional
 from sqlmodel import Field, SQLModel

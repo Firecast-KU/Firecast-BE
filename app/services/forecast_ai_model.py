@@ -1,3 +1,4 @@
+# AI 모델 연동 및 산불 위험도 예측 로직을 담당하는 서비스 클래스
 from app.schemas.forecast_response import ForecastResponse, get_risk_color
 
 

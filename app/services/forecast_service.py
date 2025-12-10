@@ -1,3 +1,4 @@
+# 산불 예측 데이터의 DB 저장, 조회 및 만료 여부 확인 등 비즈니스 로직 처리
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
 from app.models.db_model import FirePrediction, FireProbability

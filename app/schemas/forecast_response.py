@@ -1,3 +1,4 @@
+# API 응답에 사용되는 Pydantic 스키마 및 데이터 모델 정의
 from pydantic import BaseModel, Field
 from typing import Literal
 
