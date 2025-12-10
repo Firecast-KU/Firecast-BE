@@ -1,3 +1,4 @@
 fastapi==0.123.5
 uvicorn[standard]==0.38.0
 sqlmodel==0.0.27
+python-dotenv
