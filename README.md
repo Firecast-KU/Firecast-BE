@@ -34,6 +34,16 @@ uvicorn main:app --reload
 uvicorn main:app
 ```
 
+### 4. 오류 발생 시
+가상환경 재생성
+```bash
+rm -rf .venv
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
 서버가 실행되면 http://127.0.0.1:8000 에서 접근 가능합니다.
 
 ## API 문서
