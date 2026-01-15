@@ -2,6 +2,8 @@
 import random
 
 from app.schemas.forecast_response import ForecastResponse, get_risk_color
+from app.services.weather_service import fetch_latest_weather_data, fetch_observation_station_info
+from pydantic import BaseModel, Field
 
 # 대한민국 본토 좌표 범위 (섬 제외)
 # 최북단: 38° 36' N (고성군) → 38.60
@@ -48,7 +50,8 @@ def generate_korea_grid_predictions(num_regions: int = 190) -> list[dict]:
             predictions.append({
                 "latitude": round(center_lat, 8),
                 "longitude": round(center_lon, 8),
-                "probability": probability
+                "probability": probability,
+                "station_name_ko": f"지역_{row}_{col}"
             })
 
     # 196개 중 190개만 선택 (랜덤하게 6개 제외)
@@ -68,11 +71,15 @@ class AIModelService:
         Returns:
             산불 예측 결과 리스트 - list[ForecastResponse]
 
-        TODO: 실제 AI 모델 연동
+        TODO: 최신 기상 데이터 가져오기(관측소 이름도 가져오기)
+        TODO: 가져온 최신 데이터 바탕으로 실제 AI 모델 연동
         - 모델 로드 및 추론 로직 구현
         - 위도/경도 기반 예측 수행
         - 기상 데이터, 지형 데이터 등 입력 처리
         """
+        # TODO: 최신 기상 데이터 및 관측소 정보 가져오기 확인용 함수 호출, 추후 제거 예정
+        fetch_latest_weather_data()
+        fetch_observation_station_info()
         # 대한민국 본토를 190개 구역으로 나눈 더미 데이터 생성
         mock_predictions = generate_korea_grid_predictions(190)
 
@@ -84,7 +91,8 @@ class AIModelService:
                     latitude=pred["latitude"],
                     longitude=pred["longitude"],
                     probability=pred["probability"],
-                    color=get_risk_color(pred["probability"])
+                    color=get_risk_color(pred["probability"]),
+                    station_name_ko=pred["station_name_ko"]
                 )
             )
 
