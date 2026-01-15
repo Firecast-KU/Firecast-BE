@@ -61,6 +61,10 @@ python -m pip install -r requirements.txt
 - DB에 최신 데이터(3시간 이내)가 있으면 DB에서 반환
 - 없으면 AI 모델로 예측 후 DB에 저장하고 반환
 
+> [!NOTE]
+> 현재는 해당 API 구동 시 터미널에 기상청으로부터 API 가져온 로그 및 일부 결과 출력
+> 추후 해당 기능 삭제 혹은 변동 예정
+
 **응답 예시:**
 ```json
 [
@@ -68,15 +72,17 @@ python -m pip install -r requirements.txt
     "latitude": 37.54051940470045,
     "longitude": 127.07625231277218,
     "probability": 85.1,
-    "color": "red"
+    "color": "red",
+    "station_name_ko": "속초"
   },
   {
     "latitude": 37.49572170161351,
     "longitude": 127.02816889762878,
     "probability": 72.5,
-    "color": "orange"
-  }
-]
+    "color": "yellow",
+    "station_name_ko": "파주"
+  },
+ ]
 ```
 
 **위험도 색상 기준:**

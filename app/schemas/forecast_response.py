@@ -7,6 +7,7 @@ class ForecastResponse(BaseModel):
     """산불 예측 응답 모델"""
     latitude: float = Field(..., description="위도")
     longitude: float = Field(..., description="경도")
+    station_name_ko: str = Field(..., description="관측소 이름")
     probability: float = Field(..., ge=0, le=100, description="산불 발생 확률 (%)")
     color: Literal["red", "orange", "yellow", "green"] = Field(..., description="위험도 색상")
 
@@ -16,7 +17,8 @@ class ForecastResponse(BaseModel):
                 "latitude": 37.54051940470045,
                 "longitude": 127.07625231277218,
                 "probability": 85.1,
-                "color": "red"
+                "color": "red",
+                "station_name_ko": "속초"
             }
         }
 

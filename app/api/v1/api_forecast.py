@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session
 from typing import Annotated
 
-from app.db.db_config import get_session
+from app.config.db_config import get_session
 from app.schemas.forecast_response import ForecastResponse
-from app.services.forecast_ai_model import AIModelService
+from app.services.ai_model_service import AIModelService
 from app.services.forecast_service import ForecastService
 
 router = APIRouter()

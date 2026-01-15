@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 
 from app.api.v1 import api_forecast
-from app.db.db_config import engine
+from app.config.db_config import engine
 
 
 @asynccontextmanager

@@ -47,7 +47,8 @@ class ForecastService:
                 prediction_id=prediction.id,
                 latitude=forecast.latitude,
                 longitude=forecast.longitude,
-                probability=forecast.probability
+                probability=forecast.probability,
+                station_name_ko=forecast.station_name_ko
             )
             session.add(fire_prob)
 
@@ -79,7 +80,8 @@ class ForecastService:
                 latitude=float(p.latitude),
                 longitude=float(p.longitude),
                 probability=float(p.probability),
-                color=get_risk_color(float(p.probability))
+                color=get_risk_color(float(p.probability)),
+                station_name_ko=p.station_name_ko if p.station_name_ko else "알 수 없음"
             )
             for p in probabilities
         ]
