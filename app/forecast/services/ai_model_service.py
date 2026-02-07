@@ -1,9 +1,14 @@
 # AI 모델 연동 및 산불 위험도 예측 로직을 담당하는 서비스 클래스
 import random
+from typing import Optional
 
-from app.schemas.forecast_response import ForecastResponse, get_risk_color
-from app.services.weather_service import fetch_latest_weather_data, fetch_observation_station_info
-from pydantic import BaseModel, Field
+from app.asos.services.asos_feature_service import (
+    refresh_asos_common_features_if_needed,
+)
+from app.forecast.schemas.forecast_response import ForecastResponse, get_risk_color
+from app.forecast.services.forecast_feature_service import (
+    fetch_common_forecast_features,
+)
 
 # 대한민국 본토 좌표 범위 (섬 제외)
 # 최북단: 38° 36' N (고성군) → 38.60
@@ -16,7 +21,10 @@ KOREA_LON_MIN = 126.10
 KOREA_LON_MAX = 129.58
 
 
-def generate_korea_grid_predictions(num_regions: int = 190) -> list[dict]:
+def generate_korea_grid_predictions(
+    num_regions: int = 190,
+    region_names: Optional[list[str]] = None,
+) -> list[dict]:
     """
     대한민국 본토를 격자로 나눠 더미 예측 데이터 생성
 
@@ -47,11 +55,17 @@ def generate_korea_grid_predictions(num_regions: int = 190) -> list[dict]:
             # 10~90 사이의 랜덤 확률값 (소수점 1자리)
             probability = round(random.uniform(10.0, 90.0), 1)
 
+            station_name = (
+                region_names[len(predictions) % len(region_names)]
+                if region_names
+                else f"지역_{row}_{col}"
+            )
+
             predictions.append({
                 "latitude": round(center_lat, 8),
                 "longitude": round(center_lon, 8),
                 "probability": probability,
-                "station_name_ko": f"지역_{row}_{col}"
+                "station_name_ko": station_name,
             })
 
     # 196개 중 190개만 선택 (랜덤하게 6개 제외)
@@ -71,17 +85,21 @@ class AIModelService:
         Returns:
             산불 예측 결과 리스트 - list[ForecastResponse]
 
-        TODO: 최신 기상 데이터 가져오기(관측소 이름도 가져오기)
+        TODO: 최신 예보 Feature 기반으로 실제 AI 모델 연동
         TODO: 가져온 최신 데이터 바탕으로 실제 AI 모델 연동
         - 모델 로드 및 추론 로직 구현
         - 위도/경도 기반 예측 수행
         - 기상 데이터, 지형 데이터 등 입력 처리
         """
-        # TODO: 최신 기상 데이터 및 관측소 정보 가져오기 확인용 함수 호출, 추후 제거 예정
-        fetch_latest_weather_data()
-        fetch_observation_station_info()
+        # 30일 주기로 종관 데이터를 갱신해서 메모리에 유지
+        refresh_asos_common_features_if_needed()
+
+        # TODO: 공통 Feature를 모델 입력으로 사용하도록 연결 예정
+        feature_map = fetch_common_forecast_features()
+        region_names = [feature.region_name_ko for feature in feature_map.values()]
+
         # 대한민국 본토를 190개 구역으로 나눈 더미 데이터 생성
-        mock_predictions = generate_korea_grid_predictions(190)
+        mock_predictions = generate_korea_grid_predictions(190, region_names)
 
         # 확률에 따라 색상 자동 계산
         results = []

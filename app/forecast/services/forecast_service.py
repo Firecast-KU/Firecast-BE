@@ -1,8 +1,8 @@
 # 산불 예측 데이터의 DB 저장, 조회 및 만료 여부 확인 등 비즈니스 로직 처리
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
-from app.models.db_model import FirePrediction, FireProbability
-from app.schemas.forecast_response import ForecastResponse, get_risk_color
+from app.forecast.models.db_model import FirePrediction, FireProbability
+from app.forecast.schemas.forecast_response import ForecastResponse, get_risk_color
 
 class ForecastService:
     """산불 예측 데이터 관리 서비스"""

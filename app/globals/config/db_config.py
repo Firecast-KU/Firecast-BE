@@ -20,6 +20,6 @@ engine = create_engine(
 
 
 def get_session():
-    """데이터베이스 세션 의존성"""
+    """FastAPI 의존성으로 사용되는 요청 단위 DB 세션을 생성한다."""
     with Session(engine) as session:
         yield session

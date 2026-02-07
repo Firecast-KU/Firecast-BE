@@ -3,10 +3,14 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session
 from typing import Annotated
 
-from app.config.db_config import get_session
-from app.schemas.forecast_response import ForecastResponse
-from app.services.ai_model_service import AIModelService
-from app.services.forecast_service import ForecastService
+from app.asos.services.asos_feature_service import (
+    get_asos_common_feature_cache_summary,
+    refresh_asos_common_features_if_needed,
+)
+from app.forecast.schemas.forecast_response import ForecastResponse
+from app.forecast.services.ai_model_service import AIModelService
+from app.forecast.services.forecast_service import ForecastService
+from app.globals.config.db_config import get_session
 
 router = APIRouter()
 
@@ -40,3 +44,15 @@ async def get_fire_forecast(session: SessionDep) -> list[ForecastResponse]:
     else:
         # DB에서 최신 데이터 조회
         return forecast_service.get_latest_forecasts(session)
+
+
+@router.get("/weather/asos/test")
+async def test_asos_collection(force_refresh: bool = True) -> dict[str, object]:
+    """
+    종관(ASOS) 30일 수집/파싱 테스트용 임시 API
+
+    Args:
+        force_refresh: True면 즉시 재수집, False면 30일 주기 캐시 사용
+    """
+    refresh_asos_common_features_if_needed(force_refresh=force_refresh)
+    return get_asos_common_feature_cache_summary()
