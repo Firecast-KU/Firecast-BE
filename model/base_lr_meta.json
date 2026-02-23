@@ -1,0 +1,24 @@
+{
+  "model_name": "base_lr.joblib",
+  "trained_at": "2026-01-20T21:37:16",
+  "data_file": "C:\\Users\\pds20\\firecast\\src\\data\\processed\\weather_labeled.parquet",
+  "features": [
+    "TA",
+    "TMN",
+    "TMX",
+    "RN",
+    "DTR"
+  ],
+  "label": "fire_label",
+  "split": {
+    "type": "time_holdout",
+    "holdout_days": 90,
+    "cutoff": "2021-10-02",
+    "train_rows": 1280,
+    "test_rows": 182
+  },
+  "quick_metrics_on_holdout": {
+    "roc_auc": null,
+    "pr_auc": null
+  }
+}
