@@ -49,6 +49,28 @@ def parse_kma_text_data(text_data: str) -> list[list[str]]:
     return data_list
 
 
+def build_kma_url(base_url: str, **params) -> str:
+    """
+    기상청 base URL에 authKey와 추가 파라미터를 붙여 완성된 URL을 반환한다.
+
+    Args:
+        base_url: 환경변수에 저장된 기본 URL (authKey 미포함)
+        **params: 추가할 쿼리 파라미터 (기존 파라미터와 병합, 덮어쓰기)
+    """
+    from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+    from app.globals.config.config import settings
+
+    parsed = urlparse(base_url)
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+
+    # authKey 자동 주입 (URL에 이미 있으면 스킵)
+    if settings.KMA_API_KEY and "authKey" not in query:
+        query["authKey"] = settings.KMA_API_KEY
+
+    query.update(params)
+    return urlunparse(parsed._replace(query=urlencode(query)))
+
+
 def request_kma_text(url: str) -> str:
     """기상청 텍스트 API를 호출해 EUC-KR 인코딩 본문을 반환한다."""
     response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)

@@ -9,6 +9,7 @@ from typing import Optional
 from app.forecast.schemas.weather import ForecastCommonFeature, ForecastRegionInfo
 from app.globals.weather.kma_common import (
     KMA_DATETIME_FORMAT,
+    build_kma_url,
     parse_kma_datetime,
     parse_kma_text_data,
     request_kma_text,
@@ -91,7 +92,8 @@ def _select_effective_row(
 def fetch_forecast_region_info() -> dict[str, ForecastRegionInfo]:
     """단기예보구역 데이터 조회 및 REG_ID -> 구역 정보 매핑"""
     try:
-        text_data = request_kma_text(settings.KMA_FORECAST_REGION_URL)
+        url = build_kma_url(settings.KMA_FORECAST_REGION_URL, tmfc="0")
+        text_data = request_kma_text(url)
     except Exception as exc:
         print(f"Exception occurred in fetch_forecast_region_info: {exc}")
         return {}
@@ -120,7 +122,8 @@ def fetch_forecast_region_info() -> dict[str, ForecastRegionInfo]:
 def _fetch_forecast_rows() -> list[_ForecastRawRow]:
     """예특보 원천을 조회해 `(REG_ID, TM_EF)` 기준 최신 발표행으로 정규화한다."""
     try:
-        text_data = request_kma_text(settings.KMA_FORECAST_URL)
+        url = build_kma_url(settings.KMA_FORECAST_URL, disp="0", help="1")
+        text_data = request_kma_text(url)
     except Exception as exc:
         print(f"Exception occurred in _fetch_forecast_rows: {exc}")
         return []
