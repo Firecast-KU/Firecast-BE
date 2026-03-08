@@ -6,11 +6,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from threading import Lock
 from typing import Optional
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
-
 from app.asos.schemas.weather import AsosCommonFeature, AsosStationInfo
 from app.globals.weather.kma_common import (
     KMA_DATETIME_FORMAT,
+    build_kma_url,
     parse_kma_datetime,
     parse_kma_text_data,
     request_kma_text,
@@ -55,20 +54,13 @@ def _resolve_asos_collection_window(
 
 def _build_asos_range_url(tm1: datetime, tm2: datetime) -> str:
     """기준 기간(`tm1`~`tm2`)을 반영한 ASOS 조회 URL을 생성한다."""
-    parsed = urlparse(settings.KMA_ASOS_RANGE_URL)
-    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
-
-    query.update({
-        "tm1": tm1.strftime(KMA_DATETIME_FORMAT),
-        "tm2": tm2.strftime(KMA_DATETIME_FORMAT),
-        "stn": "",
-        "help": "1",
-    })
-
-    if settings.KMA_API_KEY and "authKey" not in query:
-        query["authKey"] = settings.KMA_API_KEY
-
-    return urlunparse(parsed._replace(query=urlencode(query)))
+    return build_kma_url(
+        settings.KMA_ASOS_RANGE_URL,
+        tm1=tm1.strftime(KMA_DATETIME_FORMAT),
+        tm2=tm2.strftime(KMA_DATETIME_FORMAT),
+        stn="",
+        help="1",
+    )
 
 
 def _parse_asos_common_features(
@@ -133,7 +125,16 @@ def _parse_asos_common_features(
 def fetch_asos_station_info() -> dict[str, AsosStationInfo]:
     """지상관측 지점정보를 조회해 `STN_ID -> 지점 메타정보` 매핑을 만든다."""
     try:
-        text_data = request_kma_text(settings.KMA_STATION_INFO_URL)
+        # tm을 현재 시각 기준으로 동적 설정 (운영 중인 관측소 목록 조회)
+        now_str = datetime.now().strftime(KMA_DATETIME_FORMAT)
+        url = build_kma_url(
+            settings.KMA_STATION_INFO_URL,
+            inf="SFC",
+            stn="",
+            tm=now_str,
+            help="1",
+        )
+        text_data = request_kma_text(url)
     except Exception as exc:
         print(f"Exception occurred in fetch_asos_station_info: {exc}")
         return {}
@@ -142,8 +143,8 @@ def fetch_asos_station_info() -> dict[str, AsosStationInfo]:
     station_info_by_id: dict[str, AsosStationInfo] = {}
 
     for parts in raw_rows:
-        # STN_ID, STN_SP, STN_KO 인덱스(0, 3, 10)가 있어야 파싱 가능
-        if len(parts) < 11:
+        # STN_ID(0), LON(1), LAT(2), STN_SP(3), STN_KO(10), FCT_ID(12) 필요
+        if len(parts) < 13:
             continue
 
         stn = parts[0].strip()
@@ -155,10 +156,25 @@ def fetch_asos_station_info() -> dict[str, AsosStationInfo]:
         if not stn_name_ko or stn_name_ko == "----":
             stn_name_ko = stn
 
+        # 좌표 파싱 (LON=parts[1], LAT=parts[2])
+        try:
+            lon = float(parts[1])
+            lat = float(parts[2])
+        except (ValueError, IndexError):
+            lon, lat = None, None
+
+        # 예보구역코드 파싱 (FCT_ID=parts[12])
+        fct_id = parts[12].strip() if len(parts) > 12 else None
+        if fct_id == "----":
+            fct_id = None
+
         station_info_by_id[stn] = AsosStationInfo(
             stn=stn,
             stn_name_ko=stn_name_ko,
             stn_sp=stn_sp if stn_sp and stn_sp != "----" else None,
+            lat=lat,
+            lon=lon,
+            fct_id=fct_id,
         )
 
     print(f"✅ 지상관측 지점정보 파싱 성공: {len(station_info_by_id)}개")
@@ -169,7 +185,13 @@ def refresh_asos_common_features_if_needed(
     reference_time: Optional[datetime] = None,
     force_refresh: bool = False,
 ) -> dict[str, list[AsosCommonFeature]]:
-    """ASOS 공통 Feature 캐시를 30일 주기로 갱신하고 결과를 반환한다."""
+    """
+    ASOS 공통 Feature 캐시를 30일 주기로 갱신하고 결과를 반환한다.
+
+    [재학습 파이프라인 전용] 실시간 예측에서는 사용하지 않음.
+    TODO: 월 1회 자동 재학습 스케줄러 구현 시 이 함수를 호출하도록 연결
+    TODO: 재학습 완료 후 model/ 디렉토리의 모델 파일 교체 로직 구현
+    """
     now = reference_time or datetime.now()
 
     with _asos_cache_lock:
@@ -209,6 +231,12 @@ def refresh_asos_common_features_if_needed(
         f"(tm1={tm1.strftime(KMA_DATETIME_FORMAT)}, tm2={tm2.strftime(KMA_DATETIME_FORMAT)})"
     )
     return features_by_station
+
+
+def get_cached_station_info() -> dict[str, AsosStationInfo]:
+    """캐시에 저장된 지점정보를 반환한다. 캐시가 비어있으면 빈 dict."""
+    with _asos_cache_lock:
+        return dict(_asos_cache.station_info_by_id)
 
 
 def get_asos_common_feature_cache_summary(
