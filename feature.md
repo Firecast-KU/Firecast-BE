@@ -7,6 +7,7 @@ WD_sin      # 풍향 (sin)
 WD_cos      # 풍향 (cos)
 SKY         # 하늘상태코드 (DB01(맑음),DB02(구름조금),DB03(구름많음),DB04(흐림))
 ```
+현재는 SKY가 SKY_MAP = {"DB01": 1, "DB02": 2, "DB03": 3, "DB04": 4} 이렇게 숫자형으로 매핑됨.
 ### 예보에서 해당 Feature 추출 방법
 
 | 공통 피처 | 예특보 원천 | 종관 원천                                                                | 의미               |
@@ -615,6 +616,7 @@ https://apihub.kma.go.kr/api/typ01/url/kma_sfctm3.php?tm1=202601010000&tm2=20260
     # 지상관측 지점정보 URL
     KMA_STATION_INFO_URL: str
 ```
+주소: https://apihub.kma.go.kr/api/typ01/url/stn_inf.php?inf=SFC&stn=&tm=202211300900&help=1&authKey=내_인증키
 ### 데이터 구조
 ```text
 #START7777
@@ -819,7 +821,7 @@ https://apihub.kma.go.kr/api/typ01/url/kma_sfctm3.php?tm1=202601010000&tm2=20260
     # 기상청 단기예보 구역정보 조회 URL
     KMA_FORECAST_REGION_URL: str
 ```
-
+주소: https://apihub.kma.go.kr/api/typ01/url/fct_shrt_reg.php?tmfc=0&authKey=내_인증키
 
 ### 데이터 구조
 
